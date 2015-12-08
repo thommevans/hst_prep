@@ -71,7 +71,7 @@ def phase_constraints( jd_cycle_end, syspars, P_unc=0.0, T0_unc=0.0, phase_range
     plt.plot( tfull, psignalfull, '-k', lw=2, zorder=0 )
     ms = 8
     plt.plot( t1, psignal1, 'o', mfc=c1, mec='none', ms=ms, zorder=1 )
-    plt.plot( t2, psignal2, 'o', mfc=c2, mec='none', ms=ms, zorder=2 )
+    plt.plot( t2, psignal2, 'o', mfc=c2, mec='none', ms=ms*0.5, zorder=2 )
     dy = psignal1.max()-psignal1.min()
     ymax = psignal1.max()+0.1*dy
     ymin = psignal1.min()-0.1*dy
