@@ -6,7 +6,7 @@ import batman
 
 HST_ORB_PERIOD_DAYS = 96.36/60./24.
 
-def phase_constraints( jd_cycle_end, batpar, P_unc=0.0, T0_unc=0.0, phase_range=[], n_hstorb=5, tvis_minutes=45, nsigma=3 ):
+def phase_constraints( jd_cycle_end, batpar, P_unc=0.0, T0_unc=0.0, phase_range=[], phase_exposure='first', n_hstorb=5, tvis_minutes=45, nsigma=3 ):
     """
     Given a particular transit system and a set of orbital phase
     constraints, plot the resulting HST phase coverage over the
@@ -37,8 +37,12 @@ def phase_constraints( jd_cycle_end, batpar, P_unc=0.0, T0_unc=0.0, phase_range=
     # and assuming the lower limit of the possible Tmid value:
     phase_low = phase_range[0] - nsigma*unc/batpar.per
     phase_upp = phase_range[1] + nsigma*unc/batpar.per
-    jd_start = Tmid - batpar.per*( 1-phase_low )
-
+    jd_low = Tmid - batpar.per*( 1-phase_low )
+    if phase_exposure=='first':
+        jd_start = jd_low
+    elif phase_exposure=='last':
+        jd_start = jd_low-tvis_minutes/60./24.
+        
     # Determine the offset between the earliest possible start
     # time and the latest possible start time:
     delt = batpar.per*( phase_range[1]-phase_range[0] ) + 2*nsigma*unc
@@ -101,14 +105,15 @@ def phase_constraints( jd_cycle_end, batpar, P_unc=0.0, T0_unc=0.0, phase_range=
                .format( HST_ORB_PERIOD_DAYS*24*60, tvis*24*60 )
     #text_str = '{0}\n  P = {1:.8f} days\n  T0 = {2:.8f}'.format( text_str, syspars['P'], syspars['T0'] )
     text_str = '{0}\n  P = {1:.8f} days\n  T0 = {2:.8f}'.format( text_str, batpar.per, batpar.t0 )
-    text_str = '{0}\n\nSpecified phase range:\n  Lower = {1:.5f}\n  Upper = {2:.5f}'\
-               .format( text_str, phase_range[0], phase_range[1] )
+    expstr = 'to {0} exposure of 1st orbit:'.format( phase_exposure )
+    text_str = '{0}\n\nSpecified phase range applied\n{1}\n  Lower = {2:.5f}\n  Upper = {3:.5f}'\
+               .format( text_str, expstr, phase_range[0], phase_range[1] )
     nmin_window = int( np.ceil( 24*60*batpar.per*( phase_range[1]-phase_range[0] ) ) )
     text_str = ' {0}\n({1} minute window)'.format( text_str, nmin_window )
     text_str = '{0}\n\n{1}-sigma plausible range:\n  Phase lower = {2:.5f}\n  Phase upper = {3:.5f}'\
                .format( text_str, nsigma, phase_low, phase_upp )
     ax = plt.gca()
-    ax.text( 0.05, 0.7, text_str, fontsize=text_fs, transform=ax.transAxes, \
+    ax.text( 0.03, 0.8, text_str, fontsize=text_fs, transform=ax.transAxes, \
              horizontalalignment='left', verticalalignment='top' )
 
     return fig
