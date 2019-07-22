@@ -6,7 +6,7 @@ import batman
 
 HST_ORB_PERIOD_DAYS = 96.36/60./24.
 
-def phase_constraints( jd_cycle_end, batpar, P_unc=0.0, T0_unc=0.0, phase_range=[], phase_exposure='first', n_hstorb=5, tvis_minutes=45, nsigma=3 ):
+def phase_constraints( jd_cycle_end, batpar, P_unc=0.0, T0_unc=0.0, phase_range=[], phase_exposure=['first',1], n_hstorb=5, tvis_minutes=45, nsigma=3 ):
     """
     Given a particular transit system and a set of orbital phase
     constraints, plot the resulting HST phase coverage over the
@@ -37,11 +37,13 @@ def phase_constraints( jd_cycle_end, batpar, P_unc=0.0, T0_unc=0.0, phase_range=
     # and assuming the lower limit of the possible Tmid value:
     phase_low = phase_range[0] - nsigma*unc/batpar.per
     phase_upp = phase_range[1] + nsigma*unc/batpar.per
-    jd_low = Tmid - batpar.per*( 1-phase_low )
-    if phase_exposure=='first':
-        jd_start = jd_low
-    elif phase_exposure=='last':
-        jd_start = jd_low-tvis_minutes/60./24.
+    jd_phase_low = Tmid - batpar.per*( 1-phase_low )
+    phase_orb = phase_exposure[1]
+    dt = ( phase_orb-1 )*HST_ORB_PERIOD_DAYS
+    if phase_exposure[0]=='first':
+        jd_start = jd_phase_low-dt
+    elif phase_exposure[0]=='last':
+        jd_start = ( jd_phase_low-tvis_minutes/60./24. )-dt
         
     # Determine the offset between the earliest possible start
     # time and the latest possible start time:
@@ -81,6 +83,10 @@ def phase_constraints( jd_cycle_end, batpar, P_unc=0.0, T0_unc=0.0, phase_range=
     psignal1 = pmodel1.light_curve( batpar )
     psignal2 = pmodel2.light_curve( batpar )
     psignalfull = pmodelfull.light_curve( batpar )
+    
+    ixs = ( psignalfull<psignalfull.max()-0.01*( psignalfull.max()-psignalfull.min() ) )
+    tdur = jdfull[ixs].max()-jdfull[ixs].min()
+    print( 'Transit duration = {0:.2f} days = {1:.0f} minutes'.format( tdur, tdur*24*60 ) )
 
     # Make plot:
     fig = plt.figure( figsize=[14,6] )
@@ -105,7 +111,7 @@ def phase_constraints( jd_cycle_end, batpar, P_unc=0.0, T0_unc=0.0, phase_range=
                .format( HST_ORB_PERIOD_DAYS*24*60, tvis*24*60 )
     #text_str = '{0}\n  P = {1:.8f} days\n  T0 = {2:.8f}'.format( text_str, syspars['P'], syspars['T0'] )
     text_str = '{0}\n  P = {1:.8f} days\n  T0 = {2:.8f}'.format( text_str, batpar.per, batpar.t0 )
-    expstr = 'to {0} exposure of 1st orbit:'.format( phase_exposure )
+    expstr = 'to {0} exposure of orbit {1}:'.format( phase_exposure[0], phase_exposure[1] )
     text_str = '{0}\n\nSpecified phase range applied\n{1}\n  Lower = {2:.5f}\n  Upper = {3:.5f}'\
                .format( text_str, expstr, phase_range[0], phase_range[1] )
     nmin_window = int( np.ceil( 24*60*batpar.per*( phase_range[1]-phase_range[0] ) ) )
