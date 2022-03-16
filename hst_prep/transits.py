@@ -112,6 +112,8 @@ def phase_constraints( jd_cycle_end, batpar, P_unc=0.0, T0_unc=0.0, phase_range=
     #text_str = '{0}\n  P = {1:.8f} days\n  T0 = {2:.8f}'.format( text_str, syspars['P'], syspars['T0'] )
     text_str = '{0}\n  P = {1:.8f} days\n  T0 = {2:.8f}'.format( text_str, batpar.per, batpar.t0 )
     expstr = 'to {0} exposure of orbit {1}:'.format( phase_exposure[0], phase_exposure[1] )
+    if phase_range[0]<0: phase_range[0] += 1
+    if phase_range[1]<0: phase_range[1] += 1
     text_str = '{0}\n\nSpecified phase range applied\n{1}\n  Lower = {2:.5f}\n  Upper = {3:.5f}'\
                .format( text_str, expstr, phase_range[0], phase_range[1] )
     nmin_window = int( np.ceil( 24*60*batpar.per*( phase_range[1]-phase_range[0] ) ) )
